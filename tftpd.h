@@ -53,7 +53,7 @@ private:
 		{ -1,			0 }
 	};
 
-	struct tfth_header {
+	struct tftp_header {
 		quint16 opcode;
 		union {
 			struct {
@@ -64,10 +64,12 @@ private:
 		};
 	};
 
-	char buffer[SEGSIZE + sizeof(tfth_header)];
+	char buffer[SEGSIZE + sizeof(tftp_header)];
 
-	void sendfile(struct tfth_header*);
-	void nak(quint16 error);
+	void sendfile(struct tftp_header*);
+	void getfile(struct tftp_header*);
+	void nak(Error error);
+	void ack(quint16 block);
 };
 
 #endif

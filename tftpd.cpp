@@ -17,20 +17,23 @@ void Tftpd::run()
 		if(readed < 0)
 			continue;
 
-		struct tfth_header *tp = (struct tfth_header *)buffer;
-		tp->opcode = qFromBigEndian(tp->opcode);
-		switch(tp->opcode) {
+		struct tftp_header *th = (struct tftp_header *)buffer;
+		th->opcode = qFromBigEndian(th->opcode);
+		switch(th->opcode) {
 		case RRQ:
-			sendfile(tp);
+			sendfile(th);
+			break;
+		case WRQ:
+			getfile(th);
 			break;
 		default: nak(EBADOP);
 		}
 	}
 }
 
-void Tftpd::sendfile(struct tfth_header *tp)
+void Tftpd::sendfile(struct tftp_header *th)
 {
-	char *filename = tp->path;
+	char *filename = th->path;
 	qDebug("sending %s", filename);
 	QFile file(filename);
 	if(!file.open(QIODevice::ReadOnly))
@@ -49,14 +52,14 @@ void Tftpd::sendfile(struct tfth_header *tp)
 	quint64 readed;
 	quint16 block = 1;
 	do {
-		tp->opcode = qToBigEndian((quint16)DATA);
-		tp->data.block = qToBigEndian((quint16)block);
-		readed = file.read(buffer + sizeof(struct tfth_header), SEGSIZE);
+		th->opcode = qToBigEndian((quint16)DATA);
+		th->data.block = qToBigEndian((quint16)block);
+		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
-		sock.writeDatagram(buffer, readed + sizeof(struct tfth_header), rhost, rport);
+		sock.writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
 
 		block++;
-		tp->data.block = qToBigEndian((quint16)block);
+		th->data.block = qToBigEndian((quint16)block);
 
 		while(1) {
 			QHostAddress h;
@@ -65,18 +68,63 @@ void Tftpd::sendfile(struct tfth_header *tp)
 			if(h != rhost || p != rport)
 				continue;
 
-			if(qFromBigEndian(tp->opcode) == ACK && qFromBigEndian(tp->data.block) == block - 1)
+			if(qFromBigEndian(th->opcode) == ACK && qFromBigEndian(th->data.block) == block - 1)
 				break;
 		}
 	} while(readed == SEGSIZE);
-	qDebug("sent %d blocks, %d bytes", (block - 1), (block - 2) * SEGSIZE + readed);
+	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 }
 
-void Tftpd::nak(quint16 error)
+void Tftpd::getfile(struct tftp_header *th)
 {
-	struct tfth_header *tp = (struct tfth_header *)buffer;
-	tp->opcode = qToBigEndian((quint16)ERROR);
-	tp->data.block = qToBigEndian(error);
+	char *filename = th->path;
+	qDebug("receiving %s", filename);
+	QFile file(filename);
+	if(!file.open(QIODevice::WriteOnly))
+		switch (file.error()) {
+		case QFile::PermissionsError:
+			nak(EACCESS);
+			return;
+		default:
+			nak(EUNDEF);
+			return;
+		}
+
+	ack(0);
+	quint64 received;
+	quint16 block = 1;
+	do {
+		while(1) {
+			QHostAddress h;
+			quint16 p;
+			sock.waitForReadyRead(-1);
+			received = sock.readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &h, &p);
+
+			if(h != rhost || p != rport)
+				continue;
+
+			if(qFromBigEndian(th->opcode) == DATA && qFromBigEndian(th->data.block) == block)
+				break;
+		}
+		file.write(buffer + sizeof(struct tftp_header), received - sizeof(struct tftp_header));
+		ack(block++);
+	} while (received == SEGSIZE + sizeof(struct tftp_header));
+	qDebug("received %d blocks, %llu bytes", block - 1, (block - 2) * SEGSIZE + received);
+}
+
+void Tftpd::ack(quint16 block)
+{
+	struct tftp_header ack;
+	ack.opcode = qToBigEndian((quint16)ACK);
+	ack.data.block = qToBigEndian(block);
+	sock.writeDatagram((char*)&ack, sizeof(struct tftp_header), rhost, rport);
+}
+
+void Tftpd::nak(Error error)
+{
+	struct tftp_header *th = (struct tftp_header *)buffer;
+	th->opcode = qToBigEndian((quint16)ERROR);
+	th->data.block = qToBigEndian((quint16)error);
 
 	struct errmsg *pe;
 	for (pe = errmsgs; pe->e_code >= 0; pe++)
@@ -84,12 +132,12 @@ void Tftpd::nak(quint16 error)
 			break;
 	if (pe->e_code < 0) {
 		pe->e_msg = strerror(error - 100);
-		tp->data.block = EUNDEF;   /* set 'undef' errorcode */
+		th->data.block = EUNDEF;   /* set 'undef' errorcode */
 	}
 
-	strcpy(tp->data.data, pe->e_msg);
+	strcpy(th->data.data, pe->e_msg);
 	int length = strlen(pe->e_msg);
-	tp->data.data[length] = 0;
+	th->data.data[length] = 0;
 	length += 5;
 	sock.writeDatagram(buffer, length, rhost, rport);
 }
