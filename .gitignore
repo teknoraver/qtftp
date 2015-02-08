@@ -1,0 +1,8 @@
+/Makefile
+/*.o
+/moc_*
+/qrc_*
+/template
+/ui_*.h
+/customize
+/qtftp

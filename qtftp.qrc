@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file>qtftp.png</file>
+  </qresource>
+</RCC>

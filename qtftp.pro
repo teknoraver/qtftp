@@ -1,0 +1,9 @@
+FORMS += qtftpwidget.ui
+HEADERS += qtftp.h tftpd.h tftp.h
+SOURCES += qtftp.cpp main.cpp tftpd.cpp
+RESOURCES += qtftp.qrc
+QTFTP = app
+CONFIG += debug warn_on thread qt
+TARGET = qtftp
+QT += network widgets
+RC_FILE = qtftp.rc
