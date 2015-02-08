@@ -6,11 +6,11 @@
 
 #include "ui_qtftpwidget.h"
 
-class qtftp: public QMainWindow, private Ui::MainWindow
+class QTftp: public QMainWindow, private Ui::MainWindow
 {
 	Q_OBJECT
 public:
-	qtftp();
+	QTftp();
 private:
 	Tftpd tftpd;
 private slots:

@@ -4,7 +4,7 @@
 
 #include "qtftp.h"
 
-qtftp::qtftp() : QMainWindow(0)
+QTftp::QTftp() : QMainWindow(0)
 {
 	setupUi(this);
 	connect(actionAbout, SIGNAL(triggered()), SLOT(about()));
@@ -15,7 +15,7 @@ qtftp::qtftp() : QMainWindow(0)
 }
 
 
-void qtftp::startServer()
+void QTftp::startServer()
 {
 	bool running = tftpd.isRunning();
 	root->setEnabled(running);
@@ -29,7 +29,7 @@ void qtftp::startServer()
 	}
 }
 
-void qtftp::setRoot()
+void QTftp::setRoot()
 {
 	QString path = QFileDialog::getExistingDirectory();
 	if(path.length() && QDir(path).exists()) {
@@ -38,7 +38,7 @@ void qtftp::setRoot()
 	}
 }
 
-void qtftp::about()
+void QTftp::about()
 {
 	QMessageBox::about(this, "About QTftp", "QTftp - a Qt TFTP implementation<br>by Matteo Croce <a href=\"http://teknoraver.net/\">http://teknoraver.net/</a>");
 }
