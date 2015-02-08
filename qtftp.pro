@@ -1,5 +1,5 @@
 FORMS += qtftpwidget.ui
-HEADERS += qtftp.h tftpd.h tftp.h
+HEADERS += qtftp.h tftpd.h
 SOURCES += qtftp.cpp main.cpp tftpd.cpp
 RESOURCES += qtftp.qrc
 QTFTP = app
