@@ -11,10 +11,12 @@ class qtftp: public QMainWindow, private Ui::MainWindow
 	Q_OBJECT
 public:
 	qtftp();
-	~qtftp();
-	Tftpd tftp;
+private:
+	Tftpd tftpd;
 private slots:
 	void about();
+	void startServer();
+	void setRoot();
 };
 
 #endif

@@ -10,11 +10,8 @@ class Tftpd : public QThread
 {
 Q_OBJECT
 
-public:
-	Tftpd();
-
 private:
-	QUdpSocket sock;
+	QUdpSocket *sock;
 	void run();
 	QHostAddress rhost;
 	quint16 rport;
