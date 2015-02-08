@@ -5,14 +5,17 @@
 
 void Tftpd::run()
 {
-	sock = new QUdpSocket();
-	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
-	sock->bind(69);
 	while(1) {
+		sock = new QUdpSocket();
+		connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
+		sock->bind(PORT);
+		QHostAddress rhost;
+		quint16 rport;
 		sock->waitForReadyRead(-1);
 		qint64 readed = sock->readDatagram(buffer, SEGSIZE, &rhost, &rport);
 		if(readed < 0)
 			continue;
+		sock->connectToHost(rhost, rport);
 
 		struct tftp_header *th = (struct tftp_header *)buffer;
 		th->opcode = qFromBigEndian(th->opcode);
@@ -25,9 +28,9 @@ void Tftpd::run()
 			break;
 		default: nak(EBADOP);
 		}
+		sock->close();
+		delete sock;
 	}
-	sock->close();
-	delete sock;
 }
 
 void Tftpd::server_put(struct tftp_header *th)
@@ -58,17 +61,13 @@ void Tftpd::server_put(struct tftp_header *th)
 		th->data.block = qToBigEndian((quint16)block);
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
-		sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
+		sock->write(buffer, readed + sizeof(struct tftp_header));
 
 		block++;
 		th->data.block = qToBigEndian((quint16)block);
 
 		while(1) {
-			QHostAddress h;
-			quint16 p;
-			sock->readDatagram(buffer, SEGSIZE, &h, &p);
-			if(h != rhost || p != rport)
-				continue;
+			sock->read(buffer, SEGSIZE);
 
 			if(qFromBigEndian(th->opcode) == ACK && qFromBigEndian(th->data.block) == block - 1)
 				break;
@@ -97,13 +96,8 @@ void Tftpd::server_get(struct tftp_header *th)
 	quint16 block = 1;
 	do {
 		while(1) {
-			QHostAddress h;
-			quint16 p;
 			sock->waitForReadyRead(-1);
-			received = sock->readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &h, &p);
-
-			if(h != rhost || p != rport)
-				continue;
+			received = sock->read(buffer, SEGSIZE + sizeof(struct tftp_header));
 
 			if(qFromBigEndian(th->opcode) == DATA && qFromBigEndian(th->data.block) == block)
 				break;
@@ -114,12 +108,19 @@ void Tftpd::server_get(struct tftp_header *th)
 	qDebug("received %d blocks, %llu bytes", block - 1, (block - 2) * SEGSIZE + received);
 }
 
+void Tftpd::client_get(struct tftp_header *th, QHostAddress &server, QString &path)
+{
+	sock = new QUdpSocket();
+	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
+	sock->connectToHost(server, PORT);
+}
+
 void Tftpd::ack(quint16 block)
 {
 	struct tftp_header ack;
 	ack.opcode = qToBigEndian((quint16)ACK);
 	ack.data.block = qToBigEndian(block);
-	sock->writeDatagram((char*)&ack, sizeof(struct tftp_header), rhost, rport);
+	sock->write((char*)&ack, sizeof(struct tftp_header));
 }
 
 void Tftpd::nak(Error error)
@@ -141,5 +142,5 @@ void Tftpd::nak(Error error)
 	int length = strlen(pe->e_msg);
 	th->data.data[length] = 0;
 	length += 5;
-	sock->writeDatagram(buffer, length, rhost, rport);
+	sock->write(buffer, length);
 }
