@@ -5,6 +5,7 @@
 #include <QThread>
 
 #define SEGSIZE 512
+#define PORT 69
 
 class Tftpd : public QThread
 {
@@ -65,7 +66,7 @@ private:
 
 	void server_get();
 	void server_put();
-	void client_get();
+	void client_get(QString path, QString server);
 	void client_put();
 
 	void nak(Error error);
