@@ -106,12 +106,12 @@ void QTftp::server_get()
 
 void QTftp::client_get(QString path, QString server)
 {
-	qDebug("receiving %s", th->path);
-	struct tftp_header *th = (struct tftp_header *)buffer;
-	QFile file(th->path);
+	qDebug("receiving %s", path.toUtf8().constData());
+	QFile file(path);
 	if(!file.open(QIODevice::WriteOnly))
 		return;
 
+	struct tftp_header *th = (struct tftp_header *)buffer;
 	strcpy(th->path, path.toUtf8().constData());
 	strcpy(th->path + path.length() + 1, "octect");
 
@@ -137,12 +137,12 @@ void QTftp::client_get(QString path, QString server)
 
 void QTftp::client_put(QString path, QString server)
 {
-	qDebug("sending %s", th->path);
-	struct tftp_header *th = (struct tftp_header *)buffer;
-	QFile file(th->path);
+	qDebug("sending %s", path.toUtf8().constData());
+	QFile file(path);
 	if(!file.open(QIODevice::ReadOnly))
 		return;
 
+	struct tftp_header *th = (struct tftp_header *)buffer;
 	strcpy(th->path, path.toUtf8().constData());
 	strcpy(th->path + path.length() + 1, "octect");
 
