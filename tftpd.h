@@ -5,7 +5,6 @@
 #include <QThread>
 
 #define SEGSIZE 512
-#define PORT 69
 
 class Tftpd : public QThread
 {
@@ -14,6 +13,8 @@ Q_OBJECT
 private:
 	QUdpSocket *sock;
 	void run();
+	QHostAddress rhost;
+	quint16 rport;
 
 	enum Block : quint16 {
 		RRQ	= 1,	// read request
@@ -64,9 +65,6 @@ private:
 
 	void server_put(struct tftp_header*);
 	void server_get(struct tftp_header*);
-	void client_put(struct tftp_header*, QHostAddress &server, QString &path);
-	void client_get(struct tftp_header*, QHostAddress &server, QString &path);
-
 	void nak(Error error);
 	void ack(quint16 block);
 };
