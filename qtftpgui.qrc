@@ -1,5 +1,5 @@
 <RCC>
   <qresource prefix="/">
-    <file>qtftp.png</file>
+    <file>qtftpgui.png</file>
   </qresource>
 </RCC>

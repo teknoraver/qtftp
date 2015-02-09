@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>qtftp</string>
+   <string>qtftpgui</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="qtftp.qrc">
-    <normaloff>:/qtftp.png</normaloff>:/qtftp.png</iconset>
+   <iconset resource="qtftpgui.qrc">
+    <normaloff>:/qtftpgui.png</normaloff>:/qtftpgui.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="start">
@@ -131,7 +131,7 @@
   <tabstop>get</tabstop>
  </tabstops>
  <resources>
-  <include location="qtftp.qrc"/>
+  <include location="qtftpgui.qrc"/>
  </resources>
  <connections>
   <connection>

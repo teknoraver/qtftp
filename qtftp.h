@@ -1,22 +1,77 @@
 #ifndef QTFTP_H
 #define QTFTP_H
 
-#include <QMainWindow>
-#include <tftpd.h>
+#include <QUdpSocket>
+#include <QThread>
 
-#include "ui_qtftpwidget.h"
+#define SEGSIZE 512
+#define PORT 69
 
-class QTftp: public QMainWindow, private Ui::MainWindow
+class QTftp : public QThread
 {
-	Q_OBJECT
-public:
-	QTftp();
+Q_OBJECT
+
 private:
-	Tftpd tftpd;
-private slots:
-	void about();
-	void startServer();
-	void setRoot();
+	QUdpSocket *sock;
+	void run();
+	QHostAddress rhost;
+	quint16 rport;
+
+	enum Block : quint16 {
+		RRQ	= 1,	// read request
+		WRQ	= 2,	// write request
+		DATA	= 3,	// data packet
+		ACK	= 4,	// acknowledgement
+		ERROR	= 5	// error code
+	};
+
+	enum Error : quint16 {
+		EUNDEF		= 0,	/* not defined */
+		ENOTFOUND	= 1,	/* file not found */
+		EACCESS		= 2,	/* access violation */
+		ENOSPACE	= 3,	/* disk full or allocation exceeded */
+		EBADOP		= 4,	/* illegal TFTP operation */
+		EBADID		= 5,	/* unknown transfer ID */
+		EEXISTS		= 6,	/* file already exists */
+		ENOUSER		= 7	/* no such user */
+	};
+
+	struct errmsg {
+		int e_code;
+		const char *e_msg;
+	} errmsgs[9] = {
+		{ EUNDEF,	"Undefined error code" },
+		{ ENOTFOUND,	"File not found" },
+		{ EACCESS,	"Access violation" },
+		{ ENOSPACE,	"Disk full or allocation exceeded" },
+		{ EBADOP,	"Illegal TFTP operation" },
+		{ EBADID,	"Unknown transfer ID" },
+		{ EEXISTS,	"File already exists" },
+		{ ENOUSER,	"No such user" },
+		{ -1,			0 }
+	};
+
+	struct tftp_header {
+		quint16 opcode;
+		union {
+			struct {
+				quint16 block;
+				char data[0];
+			} data;
+			char path[0];
+		};
+	};
+
+	char buffer[SEGSIZE + sizeof(tftp_header)];
+
+	void server_get();
+	void server_put();
+	void client_get(QString path, QString server);
+	void client_put();
+
+	void nak(Error error);
+	void sendAck(quint16 block);
+	void waitForAck(quint16 block);
 };
 
 #endif
