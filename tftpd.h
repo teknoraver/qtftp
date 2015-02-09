@@ -66,7 +66,8 @@ private:
 	void server_put(struct tftp_header*);
 	void server_get(struct tftp_header*);
 	void nak(Error error);
-	void ack(quint16 block);
+	void sendAck(quint16 block);
+	void waitForAck(quint16 block);
 };
 
 #endif
