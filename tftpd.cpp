@@ -18,10 +18,10 @@ void Tftpd::run()
 		th->opcode = qFromBigEndian(th->opcode);
 		switch(th->opcode) {
 		case RRQ:
-			server_put(th);
+			server_put();
 			break;
 		case WRQ:
-			server_get(th);
+			server_get();
 			break;
 		default: nak(EBADOP);
 		}
@@ -30,8 +30,9 @@ void Tftpd::run()
 	delete sock;
 }
 
-void Tftpd::server_put(struct tftp_header *th)
+void Tftpd::server_put()
 {
+	struct tftp_header *th = (struct tftp_header *)buffer;
 	qDebug("sending %s", th->path);
 	if(QString(th->path).contains('/')) {
 		nak(EACCESS);
@@ -65,8 +66,9 @@ void Tftpd::server_put(struct tftp_header *th)
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 }
 
-void Tftpd::server_get(struct tftp_header *th)
+void Tftpd::server_get()
 {
+	struct tftp_header *th = (struct tftp_header *)buffer;
 	char *filename = th->path;
 	qDebug("receiving %s", filename);
 	QFile file(filename);

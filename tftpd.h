@@ -63,8 +63,11 @@ private:
 
 	char buffer[SEGSIZE + sizeof(tftp_header)];
 
-	void server_put(struct tftp_header*);
-	void server_get(struct tftp_header*);
+	void server_get();
+	void server_put();
+	void client_get();
+	void client_put();
+
 	void nak(Error error);
 	void sendAck(quint16 block);
 	void waitForAck(quint16 block);
