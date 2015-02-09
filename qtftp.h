@@ -67,7 +67,7 @@ private:
 	void server_get();
 	void server_put();
 	void client_get(QString path, QString server);
-	void client_put();
+	void client_put(QString path, QString server);
 
 	void nak(Error error);
 	void sendAck(quint16 block);

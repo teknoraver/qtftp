@@ -106,20 +106,20 @@ void QTftp::server_get()
 
 void QTftp::client_get(QString path, QString server)
 {
-	sock = new QUdpSocket(this);
-	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
-
-	struct tftp_header *th = (struct tftp_header *)buffer;
-	strcpy(th->path, path.toUtf8().constData());
-	strcpy(th->path + path.length() + 1, "octect");
 	qDebug("receiving %s", th->path);
+	struct tftp_header *th = (struct tftp_header *)buffer;
 	QFile file(th->path);
 	if(!file.open(QIODevice::WriteOnly))
 		return;
 
+	strcpy(th->path, path.toUtf8().constData());
+	strcpy(th->path + path.length() + 1, "octect");
+
+	sock = new QUdpSocket(this);
+	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
+
 	th->opcode = qToBigEndian((quint16)RRQ);
 
-	sock->bind();
 	sock->writeDatagram(buffer, sizeof(struct tftp_header) + path.length() + sizeof("octect") - 1, QHostAddress(server), PORT);
 
 	qint64 readed;
@@ -131,6 +131,46 @@ void QTftp::client_get(QString path, QString server)
 		file.write(th->data.data, readed - sizeof(struct tftp_header));
 		sendAck(block++);
 	} while (readed == SEGSIZE + sizeof(tftp_header));
+	sock->close();
+	delete sock;
+}
+
+void QTftp::client_put(QString path, QString server)
+{
+	qDebug("sending %s", th->path);
+	struct tftp_header *th = (struct tftp_header *)buffer;
+	QFile file(th->path);
+	if(!file.open(QIODevice::ReadOnly))
+		return;
+
+	strcpy(th->path, path.toUtf8().constData());
+	strcpy(th->path + path.length() + 1, "octect");
+
+	sock = new QUdpSocket(this);
+	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
+
+	th->opcode = qToBigEndian((quint16)WRQ);
+
+	sock->writeDatagram(buffer, sizeof(struct tftp_header) + path.length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+//	rhost = QHostAddress();
+	rhost.clear();
+	rport = 0;
+	waitForAck(0);
+
+	quint64 readed;
+	quint16 block = 1;
+	do {
+		th->opcode = qToBigEndian((quint16)DATA);
+		th->data.block = qToBigEndian((quint16)block);
+		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
+
+		sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
+
+		waitForAck(block++);
+	} while(readed == SEGSIZE);
+	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
+	sock->close();
+	delete sock;
 }
 
 void QTftp::waitForAck(quint16 block)
@@ -142,7 +182,10 @@ void QTftp::waitForAck(quint16 block)
 		sock->waitForReadyRead();
 		sock->readDatagram((char *)&th, sizeof(struct tftp_header), &h, &p);
 
-		if(h != rhost || p != rport)
+		if(rhost.isNull() && rport == 0) {
+			rhost = h;
+			rport = p;
+		} else if(h != rhost || p != rport)
 			continue;
 
 		if(qFromBigEndian(th.opcode) == ACK && qFromBigEndian(th.data.block) == block)
