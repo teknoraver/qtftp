@@ -1,5 +1,6 @@
 #include <QtEndian>
 #include <QFile>
+#include <QFileInfo>
 
 #include <qtftp.h>
 
@@ -10,7 +11,7 @@ void QTftp::run()
 	sock->bind(PORT);
 	while(1) {
 		sock->waitForReadyRead(-1);
-		qint64 readed = sock->readDatagram(buffer, SEGSIZE, &rhost, &rport);
+		qint64 readed = sock->readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &rhost, &rport);
 		if(readed < 0)
 			continue;
 
@@ -33,6 +34,7 @@ void QTftp::run()
 void QTftp::server_put()
 {
 	struct tftp_header *th = (struct tftp_header *)buffer;
+	QString path = th->path;
 	qDebug("sending %s", th->path);
 	if(QString(th->path).contains('/')) {
 		nak(EACCESS);
@@ -63,15 +65,16 @@ void QTftp::server_put()
 
 		waitForAck(block++);
 	} while(readed == SEGSIZE);
+	emit fileSent(path);
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 }
 
 void QTftp::server_get()
 {
 	struct tftp_header *th = (struct tftp_header *)buffer;
-	char *filename = th->path;
-	qDebug("receiving %s", filename);
-	QFile file(filename);
+	QString path = th->path;
+	qDebug("receiving %s", th->path);
+	QFile file(path);
 	if(!file.open(QIODevice::WriteOnly))
 		switch (file.error()) {
 		case QFile::PermissionsError:
@@ -101,6 +104,7 @@ void QTftp::server_get()
 		file.write(buffer + sizeof(struct tftp_header), received - sizeof(struct tftp_header));
 		sendAck(block++);
 	} while (received == SEGSIZE + sizeof(struct tftp_header));
+	emit fileReceived(path);
 	qDebug("received %d blocks, %llu bytes", block - 1, (block - 2) * SEGSIZE + received);
 }
 
@@ -111,16 +115,17 @@ void QTftp::client_get(QString path, QString server)
 	if(!file.open(QIODevice::WriteOnly))
 		return;
 
+	QFileInfo name(path);
 	struct tftp_header *th = (struct tftp_header *)buffer;
-	strcpy(th->path, path.toUtf8().constData());
-	strcpy(th->path + path.length() + 1, "octect");
+	strcpy(th->path, name.fileName().toUtf8().constData());
+	strcpy(th->path + name.fileName().length() + 1, "octect");
 
 	sock = new QUdpSocket(this);
 	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
-	sock->writeDatagram(buffer, sizeof(struct tftp_header) + path.length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+	sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
 
 	qint64 readed;
 	quint16 block = 1;
@@ -133,6 +138,7 @@ void QTftp::client_get(QString path, QString server)
 	} while (readed == SEGSIZE + sizeof(tftp_header));
 	sock->close();
 	delete sock;
+	emit fileReceived(name.fileName());
 }
 
 void QTftp::client_put(QString path, QString server)
@@ -142,16 +148,17 @@ void QTftp::client_put(QString path, QString server)
 	if(!file.open(QIODevice::ReadOnly))
 		return;
 
+	QFileInfo name(path);
 	struct tftp_header *th = (struct tftp_header *)buffer;
-	strcpy(th->path, path.toUtf8().constData());
-	strcpy(th->path + path.length() + 1, "octect");
+	strcpy(th->path, name.fileName().toUtf8().constData());
+	strcpy(th->path + name.fileName().length() + 1, "octect");
 
 	sock = new QUdpSocket(this);
 	connect(this, SIGNAL(finished()), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)WRQ);
 
-	sock->writeDatagram(buffer, sizeof(struct tftp_header) + path.length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+	sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
 //	rhost = QHostAddress();
 	rhost.clear();
 	rport = 0;
@@ -171,6 +178,7 @@ void QTftp::client_put(QString path, QString server)
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 	sock->close();
 	delete sock;
+	emit fileSent(name.fileName());
 }
 
 void QTftp::waitForAck(quint16 block)

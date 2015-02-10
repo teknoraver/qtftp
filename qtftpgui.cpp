@@ -12,6 +12,11 @@ QTftpGui::QTftpGui() : QMainWindow(0)
 
 	connect(start, SIGNAL(clicked()), SLOT(startServer()));
 	connect(browse, SIGNAL(clicked()), SLOT(setRoot()));
+
+	connect(&qtftp, SIGNAL(fileSent(QString)), SLOT(sent(QString)));
+	connect(&qtftp, SIGNAL(fileReceived(QString)), SLOT(received(QString)));
+	connect(get, SIGNAL(clicked()), SLOT(getFile()));
+	connect(put, SIGNAL(clicked()), SLOT(putFile()));
 }
 
 
@@ -35,6 +40,34 @@ void QTftpGui::setRoot()
 	if(path.length() && QDir(path).exists()) {
 		QDir::setCurrent(path);
 		root->setText(path);
+	}
+}
+
+void QTftpGui::sent(QString file)
+{
+	statusbar->showMessage("sent '" + file + "'");
+}
+
+void QTftpGui::received(QString file)
+{
+	statusbar->showMessage("received '" + file + "'");
+}
+
+void QTftpGui::putFile()
+{
+	QString path = QFileDialog::getOpenFileName();
+	if(path.length() && QFile::exists(path)) {
+		statusbar->showMessage("sending '" + path + "'");
+		qtftp.client_put(path, "127.0.0.1");
+	}
+}
+
+void QTftpGui::getFile()
+{
+	QString path = QFileDialog::getSaveFileName();
+	if(path.length()) {
+		statusbar->showMessage("receiving '" + path + "'");
+		qtftp.client_get(path, "127.0.0.1");
 	}
 }
 

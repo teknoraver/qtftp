@@ -17,6 +17,10 @@ private slots:
 	void about();
 	void startServer();
 	void setRoot();
+	void sent(QString);
+	void received(QString);
+	void getFile();
+	void putFile();
 };
 
 #endif
