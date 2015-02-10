@@ -6,88 +6,81 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>146</height>
+    <width>204</width>
+    <height>138</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>qtftpgui</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="qtftpgui.qrc">
+   <iconset>
     <normaloff>:/qtftpgui.png</normaloff>:/qtftpgui.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="start">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>40</y>
-      <width>311</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>&amp;Start</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="root">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>271</width>
-      <height>23</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="browse">
-    <property name="geometry">
-     <rect>
-      <x>290</x>
-      <y>10</y>
-      <width>31</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>…</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="put">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>70</y>
-      <width>151</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>S&amp;end FIle</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="get">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>70</y>
-      <width>151</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>&amp;Get File</string>
-    </property>
-   </widget>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0" colspan="3">
+     <widget class="QLineEdit" name="root"/>
+    </item>
+    <item row="0" column="3">
+     <widget class="QPushButton" name="browse">
+      <property name="icon">
+       <iconset resource="qtftpgui.qrc">
+        <normaloff>:/icons/browse.png</normaloff>:/icons/browse.png</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="4">
+     <widget class="QPushButton" name="start">
+      <property name="text">
+       <string>&amp;Start server</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QPushButton" name="put">
+      <property name="text">
+       <string>S&amp;end FIle</string>
+      </property>
+      <property name="icon">
+       <iconset resource="qtftpgui.qrc">
+        <normaloff>:/icons/up.png</normaloff>:/icons/up.png</iconset>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>1</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="2" column="2" colspan="2">
+     <widget class="QPushButton" name="get">
+      <property name="text">
+       <string>&amp;Get File</string>
+      </property>
+      <property name="icon">
+       <iconset resource="qtftpgui.qrc">
+        <normaloff>:/icons/down.png</normaloff>:/icons/down.png</iconset>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>325</width>
-     <height>20</height>
+     <width>204</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -118,6 +111,10 @@
    </property>
   </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset resource="qtftpgui.qrc">
+     <normaloff>:/icons/exit.png</normaloff>:/icons/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
