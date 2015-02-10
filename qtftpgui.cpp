@@ -28,9 +28,11 @@ void QTftpGui::startServer()
 	if(running) {
 		qtftp.terminate();
 		start->setText("&Start Server");
+		statusbar->showMessage("Server stopped");
 	} else {
 		qtftp.start();
 		start->setText("&Stop Server");
+		statusbar->showMessage("Server started");
 	}
 }
 
