@@ -60,7 +60,7 @@ void QTftpGui::putFile()
 	QString path = QFileDialog::getOpenFileName();
 	if(path.length() && QFile::exists(path)) {
 		statusbar->showMessage("sending '" + path + "'");
-		qtftp.put(path, "127.0.0.1");
+		qtftp.put(path, serverip->text());
 	}
 }
 
@@ -69,7 +69,7 @@ void QTftpGui::getFile()
 	QString path = QFileDialog::getSaveFileName();
 	if(path.length()) {
 		statusbar->showMessage("receiving '" + path + "'");
-		qtftp.get(path, "127.0.0.1");
+		qtftp.get(path, serverip->text());
 	}
 }
 
