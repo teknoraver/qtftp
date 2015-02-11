@@ -33,6 +33,10 @@ void QTftp::server()
 
 void QTftp::startServer()
 {
+	if(worker.isRunning()) {
+		emit error();
+		return;
+	}
 	moveToThread(&worker);
 	connect(this, SIGNAL(doServer()), this, SLOT(server()));
 	worker.start();
@@ -190,6 +194,10 @@ void QTftp::client_put(QString path, QString server)
 
 void QTftp::get(QString path, QString server)
 {
+	if(worker.isRunning()) {
+		emit error();
+		return;
+	}
 	moveToThread(&worker);
 	connect(this, SIGNAL(doGet(QString, QString)), this, SLOT(client_get(QString, QString)));
 	worker.start();
@@ -198,6 +206,10 @@ void QTftp::get(QString path, QString server)
 
 void QTftp::put(QString path, QString server)
 {
+	if(worker.isRunning()) {
+		emit error();
+		return;
+	}
 	moveToThread(&worker);
 	connect(this, SIGNAL(doPut(QString, QString)), this, SLOT(client_put(QString, QString)));
 	worker.start();
