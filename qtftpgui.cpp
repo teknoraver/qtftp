@@ -26,11 +26,11 @@ void QTftpGui::startServer()
 	root->setEnabled(running);
 	browse->setEnabled(running);
 	if(running) {
-		qtftp.terminate();
+		qtftp.stopServer();
 		start->setText("&Start Server");
 		statusbar->showMessage("Server stopped");
 	} else {
-		qtftp.start();
+		qtftp.startServer();
 		start->setText("&Stop Server");
 		statusbar->showMessage("Server started");
 	}
@@ -60,7 +60,7 @@ void QTftpGui::putFile()
 	QString path = QFileDialog::getOpenFileName();
 	if(path.length() && QFile::exists(path)) {
 		statusbar->showMessage("sending '" + path + "'");
-		qtftp.client_put(path, "127.0.0.1");
+		qtftp.put(path, "127.0.0.1");
 	}
 }
 
@@ -69,7 +69,7 @@ void QTftpGui::getFile()
 	QString path = QFileDialog::getSaveFileName();
 	if(path.length()) {
 		statusbar->showMessage("receiving '" + path + "'");
-		qtftp.client_get(path, "127.0.0.1");
+		qtftp.get(path, "127.0.0.1");
 	}
 }
 

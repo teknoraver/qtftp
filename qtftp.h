@@ -7,13 +7,13 @@
 #define SEGSIZE 512
 #define PORT 69
 
-class QTftp : public QThread
+class QTftp : public QObject
 {
 Q_OBJECT
 
 private:
+	QThread worker;
 	QUdpSocket *sock;
-	void run();
 	QHostAddress rhost;
 	quint16 rport;
 
@@ -72,12 +72,24 @@ private:
 	void waitForAck(quint16 block);
 
 public:
+	void put(QString path, QString server);
+	void get(QString path, QString server);
+	void startServer();
+	void stopServer();
+	bool isRunning();
+
+private slots:
 	void client_get(QString path, QString server);
 	void client_put(QString path, QString server);
+	void server();
 
 signals:
 	void fileSent(QString file);
 	void fileReceived(QString file);
+	void doGet(QString, QString);
+	void doPut(QString, QString);
+	void doServer();
+	void error();
 };
 
 #endif
