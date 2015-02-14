@@ -50,7 +50,7 @@ void QTftpGui::startServer()
 
 void QTftpGui::setRoot()
 {
-	QString path = QFileDialog::getExistingDirectory();
+	QString path = QFileDialog::getExistingDirectory(0, QString(), root->text());
 	if(path.length() && QDir(path).exists()) {
 		QDir::setCurrent(path);
 		root->setText(path);
