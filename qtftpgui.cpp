@@ -28,7 +28,7 @@ QTftpGui::QTftpGui()
 	connect(&qtftp, SIGNAL(fileReceived(QString)), SLOT(received(QString)));
 	connect(get, SIGNAL(clicked()), SLOT(getFile()));
 	connect(put, SIGNAL(clicked()), SLOT(putFile()));
-	connect(&qtftp, SIGNAL(error()), SLOT(error()));
+	connect(&qtftp, SIGNAL(error(int)), SLOT(error(int)));
 }
 
 
@@ -85,9 +85,18 @@ void QTftpGui::getFile()
 	}
 }
 
-void QTftpGui::error()
+void QTftpGui::error(int err)
 {
-	QMessageBox::critical(this, "Error", "Error");
+	QString errorMsg;
+	switch (err) {
+	case QTftp::Timeout:
+		errorMsg = "Operation timed out";
+		break;
+	default:
+		errorMsg == "Error";
+		break;
+	}
+	QMessageBox::critical(this, "Error", errorMsg);
 }
 
 void QTftpGui::about()

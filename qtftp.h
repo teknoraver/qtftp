@@ -27,7 +27,7 @@ private:
 		ERROR	= 5	// error code
 	};
 
-	enum Error : quint16 {
+	enum TftpError : quint16 {
 		EUNDEF		= 0,	/* not defined */
 		ENOTFOUND	= 1,	/* file not found */
 		EACCESS		= 2,	/* access violation */
@@ -69,29 +69,36 @@ private:
 	void server_get();
 	void server_put();
 
-	void nak(Error error);
-	void sendAck(quint16 block);
-	bool waitForAck(quint16 block);
+	void nak(TftpError);
+	void sendAck(quint16);
+	bool waitForAck(quint16);
 
 public:
-	void put(QString path, QString server);
-	void get(QString path, QString server);
+	void put(QString, QString);
+	void get(QString, QString);
 	void startServer();
 	void stopServer();
 	bool isRunning();
 
+	enum Error {
+		Ok,
+		Timeout,
+		BindError,
+		FileError
+	};
+
 private slots:
-	void client_get(QString path, QString server);
-	void client_put(QString path, QString server);
+	void client_get(QString, QString);
+	void client_put(QString, QString);
 	void server();
 
 signals:
-	void fileSent(QString file);
-	void fileReceived(QString file);
+	void fileSent(QString);
+	void fileReceived(QString);
 	void doGet(QString, QString);
 	void doPut(QString, QString);
 	void doServer();
-	void error();
+	void error(int);
 };
 
 #endif
