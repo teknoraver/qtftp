@@ -2,21 +2,10 @@
 #include <QDir>
 #include <QFileDialog>
 
-#ifndef WIN32
-#include <unistd.h>
-#endif
-
 #include "qtftpgui.h"
 
 QTftpGui::QTftpGui()
 {
-#ifndef WIN32
-	if(geteuid()) {
-		QMessageBox::critical(this, "Error", "QTftpGui needs root permissions to work");
-		exit(0);
-	}
-#endif
-
 	setupUi(this);
 	connect(actionAbout, SIGNAL(triggered()), SLOT(about()));
 	connect(actionAbout_Qt, SIGNAL(triggered()), QCoreApplication::instance(), SLOT(aboutQt()));
@@ -91,6 +80,9 @@ void QTftpGui::error(int err)
 	switch (err) {
 	case QTftp::Timeout:
 		errorMsg = "Operation timed out";
+		break;
+	case QTftp::BindError:
+		errorMsg = "Failed to bind socket\nMaybe it's already bound or you need root privileges";
 		break;
 	default:
 		errorMsg == "Error";

@@ -9,7 +9,11 @@ void QTftp::server()
 	qDebug("Starting server");
 	sock = new QUdpSocket(this);
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
-	sock->bind(PORT);
+	if(!sock->bind(PORT)) {
+		sock->close();
+		emit error(BindError);
+		return;
+	}
 	while(true) {
 		sock->waitForReadyRead(-1);
 		qint64 readed = sock->readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &rhost, &rport);
