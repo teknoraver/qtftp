@@ -2,10 +2,21 @@
 #include <QDir>
 #include <QFileDialog>
 
+#ifndef WIN32
+#include <unistd.h>
+#endif
+
 #include "qtftpgui.h"
 
-QTftpGui::QTftpGui() : QMainWindow(0)
+QTftpGui::QTftpGui()
 {
+#ifndef WIN32
+	if(geteuid()) {
+		QMessageBox::critical(this, "Error", "QTftpGui needs root permissions to work");
+		exit(0);
+	}
+#endif
+
 	setupUi(this);
 	connect(actionAbout, SIGNAL(triggered()), SLOT(about()));
 	connect(actionAbout_Qt, SIGNAL(triggered()), QCoreApplication::instance(), SLOT(aboutQt()));
@@ -17,6 +28,7 @@ QTftpGui::QTftpGui() : QMainWindow(0)
 	connect(&qtftp, SIGNAL(fileReceived(QString)), SLOT(received(QString)));
 	connect(get, SIGNAL(clicked()), SLOT(getFile()));
 	connect(put, SIGNAL(clicked()), SLOT(putFile()));
+	connect(&qtftp, SIGNAL(error()), SLOT(error()));
 }
 
 
@@ -71,6 +83,11 @@ void QTftpGui::getFile()
 		statusbar->showMessage("receiving '" + path + "'");
 		qtftp.get(path, serverip->text());
 	}
+}
+
+void QTftpGui::error()
+{
+	QMessageBox::critical(this, "Error", "Error");
 }
 
 void QTftpGui::about()

@@ -43,6 +43,11 @@ void QTftp::startServer()
 	emit doServer();
 }
 
+void QTftp::stopServer()
+{
+	worker.terminate();
+}
+
 void QTftp::server_put()
 {
 	struct tftp_header *th = (struct tftp_header *)buffer;
@@ -73,9 +78,16 @@ void QTftp::server_put()
 		th->data.block = qToBigEndian((quint16)block);
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
-		sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
-
-		waitForAck(block++);
+		int i;
+		for(i = 0; i < RETRIES; i++) {
+			sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
+			if(waitForAck(block++))
+				break;
+		}
+		if(i == RETRIES) {
+			emit error();
+			return;
+		}
 	} while(readed == SEGSIZE);
 	emit fileSent(path);
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
@@ -104,7 +116,10 @@ void QTftp::server_get()
 		while(true) {
 			QHostAddress h;
 			quint16 p;
-			sock->waitForReadyRead(-1);
+			if(!sock->waitForReadyRead(TIMEOUT)) {
+				emit error();
+				return;
+			}
 			received = sock->readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &h, &p);
 
 			if(h != rhost || p != rport)
@@ -133,16 +148,29 @@ void QTftp::client_get(QString path, QString server)
 	strcpy(th->path + name.fileName().length() + 1, "octect");
 
 	sock = new QUdpSocket(this);
+	sock->bind();
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
-	sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+	int i;
+	for(i = 0; i < RETRIES; i++) {
+		sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+		if(waitForAck(0))
+			break;
+	}
+	if(i == RETRIES) {
+		emit error();
+		return;
+	}
 
 	qint64 readed;
 	quint16 block = 1;
 	do {
-		sock->waitForReadyRead(-1);
+		if(!sock->waitForReadyRead(TIMEOUT)) {
+			emit error();
+			return;
+		}
 		readed = sock->readDatagram(buffer, SEGSIZE + (sizeof(struct tftp_header)), &rhost, &rport);
 
 		file.write(th->data.data, readed - sizeof(struct tftp_header));
@@ -166,14 +194,23 @@ void QTftp::client_put(QString path, QString server)
 	strcpy(th->path + name.fileName().length() + 1, "octect");
 
 	sock = new QUdpSocket(this);
+	sock->bind();
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)WRQ);
 
-	sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
-	rhost.clear();
-	rport = 0;
-	waitForAck(0);
+	int i;
+	for(i = 0; i < RETRIES; i++) {
+		sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+		rhost.clear();
+		rport = 0;
+		if(waitForAck(0))
+			break;
+	}
+	if(i == RETRIES) {
+		emit error();
+		return;
+	}
 
 	quint64 readed;
 	quint16 block = 1;
@@ -182,9 +219,15 @@ void QTftp::client_put(QString path, QString server)
 		th->data.block = qToBigEndian((quint16)block);
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
-		sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
-
-		waitForAck(block++);
+		for(i = 0; i < RETRIES; i++) {
+			sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
+			if(waitForAck(block++))
+				break;
+		}
+		if(i == RETRIES) {
+			emit error();
+			return;
+		}
 	} while(readed == SEGSIZE);
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 	sock->close();
@@ -194,10 +237,6 @@ void QTftp::client_put(QString path, QString server)
 
 void QTftp::get(QString path, QString server)
 {
-	if(worker.isRunning()) {
-		emit error();
-		return;
-	}
 	moveToThread(&worker);
 	connect(this, SIGNAL(doGet(QString, QString)), this, SLOT(client_get(QString, QString)));
 	worker.start();
@@ -206,19 +245,10 @@ void QTftp::get(QString path, QString server)
 
 void QTftp::put(QString path, QString server)
 {
-	if(worker.isRunning()) {
-		emit error();
-		return;
-	}
 	moveToThread(&worker);
 	connect(this, SIGNAL(doPut(QString, QString)), this, SLOT(client_put(QString, QString)));
 	worker.start();
 	emit doPut(path, server);
-}
-
-void QTftp::stopServer()
-{
-	worker.terminate();
 }
 
 bool QTftp::isRunning()
@@ -226,13 +256,16 @@ bool QTftp::isRunning()
 	return worker.isRunning();
 }
 
-void QTftp::waitForAck(quint16 block)
+bool QTftp::waitForAck(quint16 block)
 {
-	while(true) {
+	for(int i = 0; i < RETRIES; i++) {
 		struct tftp_header th;
 		QHostAddress h;
 		quint16 p;
-		sock->waitForReadyRead();
+
+		if(!sock->waitForReadyRead(TIMEOUT))
+			continue;
+
 		sock->readDatagram((char *)&th, sizeof(struct tftp_header), &h, &p);
 
 		if(rhost.isNull() && rport == 0) {
@@ -242,8 +275,9 @@ void QTftp::waitForAck(quint16 block)
 			continue;
 
 		if(th.opcode == qToBigEndian((quint16)ACK) && qFromBigEndian(th.data.block) == block)
-			break;
+			return true;
 	}
+	return false;
 }
 
 void QTftp::sendAck(quint16 block)

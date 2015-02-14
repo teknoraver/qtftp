@@ -6,6 +6,8 @@
 
 #define SEGSIZE 512
 #define PORT 69
+#define TIMEOUT 1000
+#define RETRIES 3
 
 class QTftp : public QObject
 {
@@ -69,7 +71,7 @@ private:
 
 	void nak(Error error);
 	void sendAck(quint16 block);
-	void waitForAck(quint16 block);
+	bool waitForAck(quint16 block);
 
 public:
 	void put(QString path, QString server);
