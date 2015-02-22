@@ -23,10 +23,10 @@ void QTftp::server()
 		struct tftp_header *th = (struct tftp_header *)buffer;
 		switch(qFromBigEndian(th->opcode)) {
 		case RRQ:
-			server_put();
+			server_get();
 			break;
 		case WRQ:
-			server_get();
+			server_put();
 			break;
 		default: nak(EBADOP);
 		}
@@ -48,7 +48,7 @@ void QTftp::stopServer()
 	worker.terminate();
 }
 
-void QTftp::server_put()
+void QTftp::server_get()
 {
 	struct tftp_header *th = (struct tftp_header *)buffer;
 	QString path = th->path;
@@ -93,7 +93,7 @@ void QTftp::server_put()
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
 }
 
-void QTftp::server_get()
+void QTftp::server_put()
 {
 	struct tftp_header *th = (struct tftp_header *)buffer;
 	QString path = th->path;
