@@ -99,6 +99,8 @@ signals:
 	void doPut(QString, QString);
 	void doServer();
 	void error(int);
+	void progress(int);
+	void send(bool);
 };
 
 #endif

@@ -18,6 +18,8 @@ QTftpGui::QTftpGui()
 	connect(get, SIGNAL(clicked()), SLOT(getFile()));
 	connect(put, SIGNAL(clicked()), SLOT(putFile()));
 	connect(&qtftp, SIGNAL(error(int)), SLOT(error(int)));
+	connect(&qtftp, SIGNAL(send(bool)), progressBar, SLOT(setEnabled(bool)));
+	connect(&qtftp, SIGNAL(progress(int)), progressBar, SLOT(setValue(int)));
 }
 
 
@@ -49,6 +51,8 @@ void QTftpGui::setRoot()
 void QTftpGui::sent(QString file)
 {
 	statusbar->showMessage("sent '" + file + "'");
+	progressBar->reset();
+	progressBar->setEnabled(false);
 }
 
 void QTftpGui::received(QString file)
@@ -60,6 +64,7 @@ void QTftpGui::putFile()
 {
 	QString path = QFileDialog::getOpenFileName();
 	if(path.length() && QFile::exists(path)) {
+		progressBar->setEnabled(true);
 		statusbar->showMessage("sending '" + path + "'");
 		qtftp.put(path, serverip->text());
 	}

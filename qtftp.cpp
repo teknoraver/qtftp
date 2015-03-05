@@ -71,9 +71,13 @@ void QTftp::server_get()
 			return;
 		}
 
+	emit send(true);
 	quint64 readed;
 	quint16 block = 1;
 	do {
+		qint64 blocks = file.size() / 512;
+		int percent = -1;
+
 		th->opcode = qToBigEndian((quint16)DATA);
 		th->data.block = qToBigEndian((quint16)block);
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
@@ -87,6 +91,11 @@ void QTftp::server_get()
 		if(i == RETRIES) {
 			emit error(Timeout);
 			return;
+		}
+		int newp = block * 100 / blocks;
+		if(newp > percent) {
+			percent = newp;
+			emit progress(newp);
 		}
 	} while(readed == SEGSIZE);
 	emit fileSent(path);
@@ -215,6 +224,9 @@ void QTftp::client_put(QString path, QString server)
 	quint64 readed;
 	quint16 block = 1;
 	do {
+		qint64 blocks = file.size() / 512;
+		int percent = -1;
+
 		th->opcode = qToBigEndian((quint16)DATA);
 		th->data.block = qToBigEndian((quint16)block);
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
@@ -227,6 +239,11 @@ void QTftp::client_put(QString path, QString server)
 		if(i == RETRIES) {
 			emit error(Timeout);
 			return;
+		}
+		int newp = block * 100 / blocks;
+		if(newp > percent) {
+			percent = newp;
+			emit progress(newp);
 		}
 	} while(readed == SEGSIZE);
 	qDebug("sent %d blocks, %llu bytes", (block - 1), (block - 2) * SEGSIZE + readed);
