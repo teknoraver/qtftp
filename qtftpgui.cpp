@@ -13,6 +13,9 @@ QTftpGui::QTftpGui()
 	connect(start, SIGNAL(clicked()), SLOT(startServer()));
 	connect(browse, SIGNAL(clicked()), SLOT(setRoot()));
 
+	connect(serverip, SIGNAL(textChanged(QString)), SLOT(enablePutGet(QString)));
+	connect(root, SIGNAL(textChanged(QString)), SLOT(enableServer(QString)));
+
 	connect(&qtftp, SIGNAL(fileSent(QString)), SLOT(sent(QString)));
 	connect(&qtftp, SIGNAL(fileReceived(QString)), SLOT(received(QString)));
 	connect(get, SIGNAL(clicked()), SLOT(getFile()));
@@ -79,10 +82,24 @@ void QTftpGui::getFile()
 	}
 }
 
+void QTftpGui::enableServer(QString text)
+{
+	QDir dir(text);
+	start->setEnabled(dir.exists());
+}
+
+void QTftpGui::enablePutGet(QString text)
+{
+	get->setEnabled(!text.isEmpty());
+	put->setEnabled(!text.isEmpty());
+}
+
 void QTftpGui::error(int err)
 {
 	QString errorMsg;
 	switch (err) {
+	case QTftp::Ok:
+		return;
 	case QTftp::Timeout:
 		errorMsg = "Operation timed out";
 		break;

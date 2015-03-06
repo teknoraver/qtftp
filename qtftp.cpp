@@ -47,6 +47,8 @@ void QTftp::startServer()
 void QTftp::stopServer()
 {
 	worker.terminate();
+	sock->close();
+	sock->deleteLater();
 }
 
 void QTftp::server_get()

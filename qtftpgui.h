@@ -22,6 +22,8 @@ private slots:
 	void getFile();
 	void putFile();
 	void error(int);
+	void enableServer(QString);
+	void enablePutGet(QString);
 };
 
 #endif
