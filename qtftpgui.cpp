@@ -40,6 +40,7 @@ void QTftpGui::startServer()
 		start->setText("&Stop Server");
 		statusbar->showMessage("Server started");
 	}
+	clientgroup->setEnabled(running);
 }
 
 void QTftpGui::setRoot()
@@ -56,17 +57,23 @@ void QTftpGui::sent(QString file)
 	statusbar->showMessage("sent '" + file + "'");
 	progressBar->reset();
 	progressBar->setEnabled(false);
+	servergroup->setEnabled(true);
+	clientgroup->setEnabled(true);
 }
 
 void QTftpGui::received(QString file)
 {
 	statusbar->showMessage("received '" + file + "'");
+	servergroup->setEnabled(true);
+	clientgroup->setEnabled(true);
 }
 
 void QTftpGui::putFile()
 {
 	QString path = QFileDialog::getOpenFileName();
 	if(path.length() && QFile::exists(path)) {
+		servergroup->setEnabled(false);
+		clientgroup->setEnabled(false);
 		progressBar->setEnabled(true);
 		statusbar->showMessage("sending '" + path + "'");
 		qtftp.put(path, serverip->text());
@@ -77,6 +84,8 @@ void QTftpGui::getFile()
 {
 	QString path = QFileDialog::getSaveFileName();
 	if(path.length()) {
+		servergroup->setEnabled(false);
+		clientgroup->setEnabled(false);
 		statusbar->showMessage("receiving '" + path + "'");
 		qtftp.get(path, serverip->text());
 	}
@@ -114,6 +123,8 @@ void QTftpGui::error(int err)
 		break;
 	}
 	QMessageBox::critical(this, "Error", errorMsg);
+	servergroup->setEnabled(true);
+	clientgroup->setEnabled(true);
 }
 
 void QTftpGui::about()

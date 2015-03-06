@@ -4,6 +4,12 @@
 
 #include <qtftp.h>
 
+QTftp::QTftp()
+{
+	connect(this, SIGNAL(doGet(QString, QString)), this, SLOT(client_get(QString, QString)));
+	connect(this, SIGNAL(doPut(QString, QString)), this, SLOT(client_put(QString, QString)));
+}
+
 void QTftp::server()
 {
 	qDebug("Starting server");
@@ -165,17 +171,8 @@ void QTftp::client_get(QString path, QString server)
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
-	int i;
-	for(i = 0; i < RETRIES; i++) {
-		if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
-			emit error(NetworkError);
-			return;
-		}
-		if(waitForAck(0))
-			break;
-	}
-	if(i == RETRIES) {
-		emit error(Timeout);
+	if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
+		emit error(NetworkError);
 		return;
 	}
 
@@ -191,6 +188,7 @@ void QTftp::client_get(QString path, QString server)
 		file.write(th->data.data, readed - sizeof(struct tftp_header));
 		sendAck(block++);
 	} while (readed == SEGSIZE + sizeof(tftp_header));
+	qDebug("received %d blocks, %llu bytes", block - 1, (block - 2) * SEGSIZE + readed);
 	sock->close();
 	delete sock;
 	emit fileReceived(name.fileName());
@@ -242,7 +240,7 @@ void QTftp::client_put(QString path, QString server)
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
 		for(i = 0; i < RETRIES; i++) {
-			if(sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport) > 0) {
+			if(sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport) <= 0) {
 				emit error(NetworkError);
 				return;
 			}
@@ -268,7 +266,6 @@ void QTftp::client_put(QString path, QString server)
 void QTftp::get(QString path, QString server)
 {
 	moveToThread(&worker);
-	connect(this, SIGNAL(doGet(QString, QString)), this, SLOT(client_get(QString, QString)));
 	worker.start();
 	emit doGet(path, server);
 }
@@ -276,7 +273,6 @@ void QTftp::get(QString path, QString server)
 void QTftp::put(QString path, QString server)
 {
 	moveToThread(&worker);
-	connect(this, SIGNAL(doPut(QString, QString)), this, SLOT(client_put(QString, QString)));
 	worker.start();
 	emit doPut(path, server);
 }

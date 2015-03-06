@@ -74,6 +74,7 @@ private:
 	bool waitForAck(quint16);
 
 public:
+	QTftp();
 	void put(QString, QString);
 	void get(QString, QString);
 	void startServer();
