@@ -91,10 +91,8 @@ void QTftp::server_get()
 			if(waitForAck(block++))
 				break;
 		}
-		if(i == RETRIES) {
-			emit error(Timeout);
+		if(i == RETRIES)
 			return;
-		}
 		int newp = block * 100 / blocks;
 		if(newp > percent) {
 			percent = newp;
@@ -124,14 +122,13 @@ void QTftp::server_put()
 	sendAck(0);
 	quint64 received;
 	quint16 block = 1;
+	int i;
 	do {
-		while(true) {
+		for(i = 0; i < RETRIES; i++) {
 			QHostAddress h;
 			quint16 p;
-			if(!sock->waitForReadyRead(TIMEOUT)) {
-				emit error(Timeout);
+			if(!sock->waitForReadyRead(TIMEOUT))
 				return;
-			}
 			received = sock->readDatagram(buffer, SEGSIZE + sizeof(struct tftp_header), &h, &p);
 
 			if(h != rhost || p != rport)
@@ -140,6 +137,8 @@ void QTftp::server_put()
 			if(th->opcode == qToBigEndian((quint16)DATA) && qFromBigEndian(th->data.block) == block)
 				break;
 		}
+		if(i == RETRIES)
+			return;
 		file.write(buffer + sizeof(struct tftp_header), received - sizeof(struct tftp_header));
 		sendAck(block++);
 	} while (received == SEGSIZE + sizeof(struct tftp_header));
