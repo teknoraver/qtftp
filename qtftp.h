@@ -84,7 +84,8 @@ public:
 		Ok,
 		Timeout,
 		BindError,
-		FileError
+		FileError,
+		NetworkError
 	};
 
 private slots:

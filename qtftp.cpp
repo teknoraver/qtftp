@@ -9,6 +9,7 @@ void QTftp::server()
 	qDebug("Starting server");
 	sock = new QUdpSocket(this);
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
+	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
 	if(!sock->bind(PORT)) {
 		sock->close();
 		emit error(BindError);
@@ -159,12 +160,16 @@ void QTftp::client_get(QString path, QString server)
 	sock = new QUdpSocket(this);
 	sock->bind();
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
+	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
 	int i;
 	for(i = 0; i < RETRIES; i++) {
-		sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+		if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
+			emit error(NetworkError);
+			return;
+		}
 		if(waitForAck(0))
 			break;
 	}
@@ -205,12 +210,16 @@ void QTftp::client_put(QString path, QString server)
 	sock = new QUdpSocket(this);
 	sock->bind();
 	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
+	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
 
 	th->opcode = qToBigEndian((quint16)WRQ);
 
 	int i;
 	for(i = 0; i < RETRIES; i++) {
-		sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT);
+		if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
+			emit error(NetworkError);
+			return;
+		}
 		rhost.clear();
 		rport = 0;
 		if(waitForAck(0))
@@ -232,7 +241,10 @@ void QTftp::client_put(QString path, QString server)
 		readed = file.read(buffer + sizeof(struct tftp_header), SEGSIZE);
 
 		for(i = 0; i < RETRIES; i++) {
-			sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport);
+			if(sock->writeDatagram(buffer, readed + sizeof(struct tftp_header), rhost, rport) > 0) {
+				emit error(NetworkError);
+				return;
+			}
 			if(waitForAck(block++))
 				break;
 		}

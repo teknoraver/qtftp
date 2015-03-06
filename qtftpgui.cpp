@@ -89,8 +89,11 @@ void QTftpGui::error(int err)
 	case QTftp::BindError:
 		errorMsg = "Failed to bind socket\nMaybe it's already bound or you need root privileges";
 		break;
+	case QTftp::NetworkError:
+		errorMsg = "Network Error";
+		break;
 	default:
-		errorMsg == "Error";
+		errorMsg = "Error";
 		break;
 	}
 	QMessageBox::critical(this, "Error", errorMsg);
