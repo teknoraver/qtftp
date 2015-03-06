@@ -307,6 +307,7 @@ bool QTftp::waitForAck(quint16 block)
 			return true;
 	}
 	emit error(Timeout);
+	return false;
 }
 
 void QTftp::sendAck(quint16 block)
