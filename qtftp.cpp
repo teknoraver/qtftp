@@ -306,7 +306,7 @@ bool QTftp::waitForAck(quint16 block)
 		if(th.opcode == qToBigEndian((quint16)ACK) && qFromBigEndian(th.data.block) == block)
 			return true;
 	}
-	return false;
+	emit error(Timeout);
 }
 
 void QTftp::sendAck(quint16 block)
