@@ -5,3 +5,4 @@
 /ui_*.h
 /qtftpgui
 /qtftpgui.pro.user*
+*_plugin_import.cpp
