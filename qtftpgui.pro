@@ -7,3 +7,7 @@ CONFIG += release warn_on thread qt c++11
 TARGET = qtftpgui
 QT += network widgets
 RC_FILE = qtftpgui.rc
+
+win32 {
+	LIBS += -static
+}
