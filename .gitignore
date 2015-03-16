@@ -1,4 +1,5 @@
-/Makefile
+/Makefile*
+/release/
 /*.o
 /moc_*
 /qrc_*
