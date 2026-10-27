@@ -129,5 +129,5 @@ void QTftpGui::error(int err)
 
 void QTftpGui::about()
 {
-	QMessageBox::about(this, "About QTftpGui", "QTftpGui - a Qt TFTP implementation<br>by Matteo Croce <a href=\"http://teknoraver.net/\">http://teknoraver.net/</a>");
+	QMessageBox::about(this, "About QTftpGui", "QTftpGui - a Qt TFTP implementation<br>by Matteo Croce <a href=\"https://matteocroce.it/\">https://matteocroce.it/</a>");
 }
