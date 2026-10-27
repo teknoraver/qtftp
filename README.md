@@ -8,6 +8,8 @@ QTftpGui is a small TFTP client and server written with Qt.
 The server listens on the standard TFTP port 69: on Linux binding it requires root privileges,
 or the `CAP_NET_BIND_SERVICE` capability.
 
+<p align="center"><img src="https://github.com/user-attachments/assets/574777a3-d515-40f4-b553-cafec394a2d9" alt="QTftpGui main window" width="248"></p>
+
 ## Build
 
 Requirements: CMake 3.19 or newer and Qt 6 (Widgets, Network).
