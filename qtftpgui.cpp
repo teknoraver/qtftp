@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2015 Matteo Croce
+
 #include <QMessageBox>
 #include <QDir>
 #include <QFileDialog>

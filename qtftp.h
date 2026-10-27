@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2015 Matteo Croce
+
 #ifndef QTFTP_H
 #define QTFTP_H
 
