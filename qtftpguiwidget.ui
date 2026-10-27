@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>qtftpgui</string>
+   <string>QTftpGui</string>
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>:/qtftpgui.png</normaloff>:/qtftpgui.png</iconset>
+    <normaloff>:/icons/qtftpgui.png</normaloff>:/icons/qtftpgui.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
