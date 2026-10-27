@@ -1,9 +1,2 @@
-/Makefile*
-/release/
-/*.o
-/moc_*
-/qrc_*
-/ui_*.h
-/qtftpgui
-/qtftpgui.pro.user*
-*_plugin_import.cpp
+/build*/
+/CMakeLists.txt.user*
