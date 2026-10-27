@@ -4,6 +4,7 @@ project(qtftpgui LANGUAGES CXX)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 qt_standard_project_setup()
+set(CMAKE_AUTORCC ON)
 
 qt_add_executable(qtftpgui WIN32 MACOSX_BUNDLE
 	main.cpp
