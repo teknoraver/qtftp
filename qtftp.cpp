@@ -162,7 +162,7 @@ void QTftp::client_get(QString path, QString server)
 	QFileInfo name(path);
 	struct tftp_header *th = (struct tftp_header *)buffer;
 	strcpy(th->path, name.fileName().toUtf8().constData());
-	strcpy(th->path + name.fileName().length() + 1, "octect");
+	strcpy(th->path + name.fileName().length() + 1, "octet");
 
 	sock = new QUdpSocket(this);
 	sock->bind();
@@ -171,7 +171,7 @@ void QTftp::client_get(QString path, QString server)
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
-	if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
+	if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octet") - 1, QHostAddress(server), PORT) <= 0) {
 		emit error(NetworkError);
 		return;
 	}
@@ -204,7 +204,7 @@ void QTftp::client_put(QString path, QString server)
 	QFileInfo name(path);
 	struct tftp_header *th = (struct tftp_header *)buffer;
 	strcpy(th->path, name.fileName().toUtf8().constData());
-	strcpy(th->path + name.fileName().length() + 1, "octect");
+	strcpy(th->path + name.fileName().length() + 1, "octet");
 
 	sock = new QUdpSocket(this);
 	sock->bind();
@@ -215,7 +215,7 @@ void QTftp::client_put(QString path, QString server)
 
 	int i;
 	for(i = 0; i < RETRIES; i++) {
-		if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octect") - 1, QHostAddress(server), PORT) <= 0) {
+		if(sock->writeDatagram(buffer, sizeof(struct tftp_header) + name.fileName().length() + sizeof("octet") - 1, QHostAddress(server), PORT) <= 0) {
 			emit error(NetworkError);
 			return;
 		}
