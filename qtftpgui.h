@@ -2,7 +2,7 @@
 #define QTFTPGUI_H
 
 #include <QMainWindow>
-#include <qtftp.h>
+#include "qtftp.h"
 
 #include "ui_qtftpguiwidget.h"
 

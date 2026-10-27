@@ -2,20 +2,20 @@
 #include <QFile>
 #include <QFileInfo>
 
-#include <qtftp.h>
+#include "qtftp.h"
 
 QTftp::QTftp()
 {
-	connect(this, SIGNAL(doGet(QString, QString)), this, SLOT(client_get(QString, QString)));
-	connect(this, SIGNAL(doPut(QString, QString)), this, SLOT(client_put(QString, QString)));
+	connect(this, &QTftp::doGet, this, &QTftp::client_get);
+	connect(this, &QTftp::doPut, this, &QTftp::client_put);
 }
 
 void QTftp::server()
 {
 	qDebug("Starting server");
 	sock = new QUdpSocket(this);
-	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
-	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
+	connect(&worker, &QThread::finished, sock, &QObject::deleteLater);
+	connect(this, &QTftp::error, sock, &QObject::deleteLater);
 	if(!sock->bind(PORT)) {
 		sock->close();
 		emit error(BindError);
@@ -45,7 +45,7 @@ void QTftp::server()
 void QTftp::startServer()
 {
 	moveToThread(&worker);
-	connect(this, SIGNAL(doServer()), this, SLOT(server()));
+	connect(this, &QTftp::doServer, this, &QTftp::server);
 	worker.start();
 	emit doServer();
 }
@@ -166,8 +166,8 @@ void QTftp::client_get(QString path, QString server)
 
 	sock = new QUdpSocket(this);
 	sock->bind();
-	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
-	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
+	connect(&worker, &QThread::finished, sock, &QObject::deleteLater);
+	connect(this, &QTftp::error, sock, &QObject::deleteLater);
 
 	th->opcode = qToBigEndian((quint16)RRQ);
 
@@ -208,8 +208,8 @@ void QTftp::client_put(QString path, QString server)
 
 	sock = new QUdpSocket(this);
 	sock->bind();
-	connect(&worker, SIGNAL(finished()), sock, SLOT(deleteLater()));
-	connect(this, SIGNAL(error(int)), sock, SLOT(deleteLater()));
+	connect(&worker, &QThread::finished, sock, &QObject::deleteLater);
+	connect(this, &QTftp::error, sock, &QObject::deleteLater);
 
 	th->opcode = qToBigEndian((quint16)WRQ);
 

@@ -50,7 +50,7 @@ private:
 		{ EBADID,	"Unknown transfer ID" },
 		{ EEXISTS,	"File already exists" },
 		{ ENOUSER,	"No such user" },
-		{ -1,			0 }
+		{ -1,			nullptr }
 	};
 
 	struct tftp_header {

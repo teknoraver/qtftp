@@ -7,22 +7,22 @@
 QTftpGui::QTftpGui()
 {
 	setupUi(this);
-	connect(actionAbout, SIGNAL(triggered()), SLOT(about()));
-	connect(actionAbout_Qt, SIGNAL(triggered()), QCoreApplication::instance(), SLOT(aboutQt()));
+	connect(actionAbout, &QAction::triggered, this, &QTftpGui::about);
+	connect(actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
-	connect(start, SIGNAL(clicked()), SLOT(startServer()));
-	connect(browse, SIGNAL(clicked()), SLOT(setRoot()));
+	connect(start, &QPushButton::clicked, this, &QTftpGui::startServer);
+	connect(browse, &QPushButton::clicked, this, &QTftpGui::setRoot);
 
-	connect(serverip, SIGNAL(textChanged(QString)), SLOT(enablePutGet(QString)));
-	connect(root, SIGNAL(textChanged(QString)), SLOT(enableServer(QString)));
+	connect(serverip, &QLineEdit::textChanged, this, &QTftpGui::enablePutGet);
+	connect(root, &QLineEdit::textChanged, this, &QTftpGui::enableServer);
 
-	connect(&qtftp, SIGNAL(fileSent(QString)), SLOT(sent(QString)));
-	connect(&qtftp, SIGNAL(fileReceived(QString)), SLOT(received(QString)));
-	connect(get, SIGNAL(clicked()), SLOT(getFile()));
-	connect(put, SIGNAL(clicked()), SLOT(putFile()));
-	connect(&qtftp, SIGNAL(error(int)), SLOT(error(int)));
-	connect(&qtftp, SIGNAL(send(bool)), progressBar, SLOT(setEnabled(bool)));
-	connect(&qtftp, SIGNAL(progress(int)), progressBar, SLOT(setValue(int)));
+	connect(&qtftp, &QTftp::fileSent, this, &QTftpGui::sent);
+	connect(&qtftp, &QTftp::fileReceived, this, &QTftpGui::received);
+	connect(get, &QPushButton::clicked, this, &QTftpGui::getFile);
+	connect(put, &QPushButton::clicked, this, &QTftpGui::putFile);
+	connect(&qtftp, &QTftp::error, this, &QTftpGui::error);
+	connect(&qtftp, &QTftp::send, progressBar, &QWidget::setEnabled);
+	connect(&qtftp, &QTftp::progress, progressBar, &QProgressBar::setValue);
 }
 
 
@@ -45,7 +45,7 @@ void QTftpGui::startServer()
 
 void QTftpGui::setRoot()
 {
-	QString path = QFileDialog::getExistingDirectory(0, QString(), root->text());
+	QString path = QFileDialog::getExistingDirectory(this, QString(), root->text());
 	if(path.length() && QDir(path).exists()) {
 		QDir::setCurrent(path);
 		root->setText(path);
